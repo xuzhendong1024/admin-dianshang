@@ -34,7 +34,7 @@
         label="操作">
         <template slot-scope="{row, $index }">
           <el-button type="warning" icon="el-icon-edit" size="mini" @click="updateTradeMark(row)">修改</el-button>
-          <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
+          <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteTradeMark(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -55,11 +55,11 @@
 
     <!--对话框-->
     <el-dialog :title="form.id ? '修改品牌' : '添加品牌'" :visible.sync="dialogFormVisible">
-      <el-form :model="form" style="width: 75%">
-        <el-form-item label="品牌名称" :label-width="formLabelWidth">
+      <el-form :model="form" style="width: 75%" :rules="rules" ref="ruleForm">
+        <el-form-item label="品牌名称" :label-width="formLabelWidth" prop="tmName">
           <el-input v-model="form.tmName" autocomplete="off"></el-input>
         </el-form-item>
-        <el-form-item label="品牌LOGO" :label-width="formLabelWidth">
+        <el-form-item label="品牌LOGO" :label-width="formLabelWidth" prop="logoUrl">
           <!--不能使用v-model收集数据
           action：设置图片上传地址
           -->
@@ -100,7 +100,16 @@
           logoUrl: '',
           id: null,
         },
-        formLabelWidth: '120px'
+        formLabelWidth: '120px',
+        rules: {
+          tmName: [
+            {required: true, message: '请输入品牌名称', trigger: 'blur'},
+            {min: 2, max: 8, message: '长度在 2 到 8 个字符', trigger: 'blur'}
+          ],
+          logoUrl: [
+            {required: true, message: '请选择品牌图片', trigger: 'change'}
+          ],
+        }
       }
     },
     mounted() {
@@ -157,19 +166,26 @@
         return isJPG && isLt2M;
       },
       //  确定事件
-      async AddOrUpdate() {
-        this.dialogFormVisible = false;
-        //  发请求
-        let result = await this.$API.tradeMark.reqAddOrUpdateTradeMark(this.form);
-        if (result.code === 200) {
-          //  弹出添加信息/修改信息
-          this.$message({
-            message: this.form.id ? '修改成功' : `添加成功`,
-            type: 'success'
+      AddOrUpdate() {
+        this.$refs.ruleForm.validate(async (valid) => {
+          if (valid) {
+            this.dialogFormVisible = false;
+            //  发请求
+            let result = await this.$API.tradeMark.reqAddOrUpdateTradeMark(this.form);
+            if (result.code === 200) {
+              //  弹出添加信息/修改信息
+              this.$message({
+                  message: this.form.id ? '修改成功' : `添加成功`,
+                  type: 'success'
+                }
+              );
+              await this.getPageList();
             }
-            );
-          await this.getPageList();
-        }
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        })
       },
       //修改
       updateTradeMark(row) {
@@ -177,9 +193,31 @@
         //赋值给form,使用浅拷贝，不要直接操作表单数据
         this.form = {...row};
 
-      }
-    },
+      },
 
+      //删除
+      async deleteTradeMark(row) {
+        this.$confirm(`确定删除 ${row.tmName}`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async () => {
+          let result = await this.$API.tradeMark.reqDeleteTradeMark(row.id);
+          if (result.code === 200) {
+            this.$message ({
+              message: '删除成功',
+              type: "success"
+            });
+            await this.getPageList();
+          }
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          });
+        });
+        }
+      }
   }
 </script>
 
