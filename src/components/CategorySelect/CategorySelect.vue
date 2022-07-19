@@ -23,7 +23,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="三级分类">
-        <el-select v-model="threeForm.category3Id" placeholder="请选择">
+        <el-select v-model="threeForm.category3Id" placeholder="请选择" @change="handler3">
           <el-option
             :key="category3List.id"
             :label="category3List.name"
@@ -54,27 +54,48 @@
       this.getCategory();
     },
     methods: {
+      //获取一级分类函数
       async getCategory() {
         let result = await this.$API.attr.reqCategory1List();
         if (result.code === 200) {
           this.category1List = result.data
         }
       },
+      //获取二级分类函数
       async handler1() {
+        //清空二三级分类
         this.category2List = [];
+        this.category3List = [];
+        this.threeForm.category2Id = '';
+        this.threeForm.category3Id = '';
+        //结构id
         const {category1Id} = this.threeForm;
+        //传值给父组件
+        this.$emit("getCategoryId",{categoryId: category1Id, level: 1})
         let result = await this.$API.attr.reqCategory2List(category1Id);
         if (result.code === 200) {
           this.category2List = result.data
         }
       },
-    async  handler2() {
+      //获取三级分类函数
+      async  handler2() {
+        //清除三级分类
+        this.category3List = [];
+        this.threeForm.category3Id = '';
+        //结构id
         const {category2Id} = this.threeForm;
+        //传值给父组件
+        this.$emit("getCategoryId",{categoryId: category2Id, level: 2})
         let result = await this.$API.attr.reqCategory3List(category2Id);
-        console.log(result)
+        // console.log(result)
         if (result.code === 200) {
           this.category3List = result.data
         }
+      },
+      handler3() {
+        //传值给父组件
+        const {category3Id} = this.threeForm;
+        this.$emit("getCategoryId",{categoryId: category3Id, level: 3})
       }
     },
   }
