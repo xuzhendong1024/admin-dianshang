@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-card style="margin: 20px 0" shadow="hover">
-      <category-select @getCategoryId="getCategoryId"/>
+      <category-select @getCategoryId="getCategoryId" :show="!isShowTable"/>
     </el-card>
     <el-card shadow="hover">
       <div v-show="isShowTable">
@@ -42,7 +42,7 @@
             width="251">
             <slot slot-scope="{row, $index}">
               <el-button type="warning" icon="el-icon-edit" size="mini" @click="updateAttr(row)">修改</el-button>
-              <el-button type="danger" icon="el-icon-delete" size="mini" >删除</el-button>
+              <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
             </slot>
           </el-table-column>
         </el-table>
@@ -89,13 +89,14 @@
             label="操作"
             width="180">
             <template slot-scope="{row, $index}">
+              <!--弹出确定框-->
               <el-popconfirm :title="`确定删除 ${row.valueName}?`" @onConfirm="deleteAttrValue($index)">
                 <el-button size="mini" icon="el-icon-delete" type="danger" slot="reference"></el-button>
               </el-popconfirm>
             </template>
           </el-table-column>
         </el-table>
-        <el-button type="primary">保存</el-button>
+        <el-button type="primary" :disabled="attrInfo.attrValueList.length < 1" @click="submitAttr">保存</el-button>
         <el-button @click="cancelAddAttr">取消</el-button>
       </div>
     </el-card>
@@ -160,7 +161,7 @@
           valueName: '',
         });
         this.$nextTick(() => {
-          this.$refs[this.attrInfo.attrValueList.length-1].focus();
+          this.$refs[this.attrInfo.attrValueList.length - 1].focus();
         })
       },
       cancelAddAttr() {
@@ -226,8 +227,31 @@
           this.$refs[index].focus();
         })
       },
+      //删除属性值
       deleteAttrValue(index) {
         this.attrInfo.attrValueList.splice(index, 1);
+      },
+      //  提交
+      async submitAttr() {
+        //数组为空
+        this.attrInfo.attrValueList = this.attrInfo.attrValueList.filter(item => {
+          if (item.valueName === '') {
+            //去掉多余的字段
+            delete item.flag;
+            return true;
+          }
+        });
+        try {
+          await this.$API.attr.reqAddOrUpdateAttr(this.attrInfo);
+          this.$message({
+            type: 'success',
+            message: '保存成功'
+          });
+          await this.getAttrList();
+          this.isShowTable = true;
+        } catch (e) {
+          console.log(e)
+        }
       }
     }
   }

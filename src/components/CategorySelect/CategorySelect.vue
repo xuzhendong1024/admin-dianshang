@@ -1,9 +1,9 @@
 <!--三级联动组件-->
 <template>
   <div>
-    <el-form :inline="true" :model="threeForm" label-width="80px">
-      <el-form-item label="一级分类">
-        <el-select v-model="threeForm.category1Id" placeholder="请选择" @change="handler1">
+    <el-form :inline="true" :model="threeForm" label-width="80px" >
+      <el-form-item label="一级分类" >
+        <el-select v-model="threeForm.category1Id" placeholder="请选择" @change="handler1" :disabled="show">
           <el-option
             v-for="item in category1List"
             :key="item.id"
@@ -13,7 +13,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="二级分类">
-        <el-select v-model="threeForm.category2Id" placeholder="请选择" @change="handler2">
+        <el-select v-model="threeForm.category2Id" placeholder="请选择" @change="handler2" :disabled="show">
           <el-option
             v-for="item in category2List"
             :key="item.id"
@@ -22,8 +22,8 @@
           </el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="三级分类">
-        <el-select v-model="threeForm.category3Id" placeholder="请选择" @change="handler3">
+      <el-form-item label="三级分类" >
+        <el-select v-model="threeForm.category3Id" placeholder="请选择" @change="handler3" :disabled="show">
           <el-option
             :key="category3List.id"
             :label="category3List.name"
@@ -50,6 +50,7 @@
         category3List: '',
       }
     },
+    props: ['show'],
     mounted() {
       this.getCategory();
     },
